@@ -7,14 +7,6 @@ function initializeMain() {
     //Initialize JQuery
     Parse.$ = jQuery;
     Parse.initialize("Nw7LzDSBThSKyvym6Q7TwDWcRcz44aOddL75efLL", "ZQPEog0nlJgVwBSbHRfgiGeWNTczY8Lr7PXeUWMU");
-
-    var currentUser = Parse.User.current();
-
-    // if (currentUser) {
-    //     //Logged in
-    // } else {
-    //     //Not logged in
-    // }
 }
 
 function redirectToProfile() {
@@ -32,9 +24,6 @@ function login() {
     var email = $("#inputEmail").val();
     var password = $("#inputPassword").val();
 
-    //Validate email meets expectation, or set error message
-    //Validate password meets expectation, or set error message
-
     Parse.User.logIn(email, password, {
         success: function (user) {
             var role = user.get("role");
@@ -46,9 +35,31 @@ function login() {
                     break;
                 case 1:
                     location = "jobs.html";
+
+                    ParsePushPlugin.getInstallationId(function (id) {
+                        if (!user.get('installId')) {
+                            user.set('installId', id);
+
+                            user.save();
+
+                            var query = new Parse.Query(Parse.Installation);
+                            query.equalTo('installationId', id);
+
+                            query.find({
+                                success: function (installation) {
+                                   installation[0].set('channels', ['employee']);
+                                   installation[0].save();
+                                },
+                                error: function (error) {
+
+                                }
+                            });
+                        }
+                    });
+
                     break;
                 case 2:
-                    location = "admin.html";
+                    location = "jobs.html";
                     break;
                 default:
                     break;

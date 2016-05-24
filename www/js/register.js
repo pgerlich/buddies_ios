@@ -92,16 +92,22 @@ angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
                 user.set("lastName", $scope.lastName);
                 user.set("phone", $scope.phoneNumber);
 
-                //Call parse signup function
-                user.signUp(null, {
-                    success: function (user) {
-                        $scope.user = user;
-                        $scope.addVehicle();
-                    },
-                    error: function (user, error) {
-                        // Show the error message somewhere and let the user try again.
-                        alert("Error: " + error.code + " " + error.message);
-                    }
+                ParsePushPlugin.getInstallationId(function(id) {
+                    user.set('installId', id);
+
+                    //Call parse signup function
+                    user.signUp(null, {
+                        success: function (user) {
+                            $scope.user = user;
+                            $scope.addVehicle();
+                        },
+                        error: function (user, error) {
+                            // Show the error message somewhere and let the user try again.
+                            alert("Error: " + error.code + " " + error.message);
+                        }
+                    });
+                }, function(e) {
+                    alert('error');
                 });
             }
 
