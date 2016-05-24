@@ -8,7 +8,7 @@
  */
 (function (factory) {
     if (typeof define === "function" && define.amd) {
-        define(["libs/jquery"], factory);
+        define(["jquery"], factory);
     } else {
         factory(jQuery);
     }
@@ -1407,7 +1407,7 @@
  */
 (function (factory) {
     if (typeof define === "function" && define.amd) {
-        define(["libs/jquery", "./jquery.validate"], factory);
+        define(["jquery", "./jquery.validate"], factory);
     } else {
         factory(jQuery);
     }

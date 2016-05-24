@@ -1,15 +1,15 @@
-$( document ).ready(  );
+$(document).ready();
 
 //If we need angular stuff. Not sure yet
 angular.module("myApp", ['ngAnimate', 'ui.bootstrap']);
-angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
+angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
     //Job status constants
     const STATUS_UNCLAIMED = 0;
     const STATUS_CLAIMED = 1;
     const STATUS_COMPLETE = 2;
     const STATUS_PAID = 3;
 
-     //Initialize Parse
+    //Initialize Parse
     Parse.$ = jQuery;
     Parse.initialize("Nw7LzDSBThSKyvym6Q7TwDWcRcz44aOddL75efLL", "ZQPEog0nlJgVwBSbHRfgiGeWNTczY8Lr7PXeUWMU");
 
@@ -20,54 +20,61 @@ angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
     $scope.vehiclesLoaded = false;
     $scope.jobsLoaded = false;
 
-    if (!$scope.user){
+    if (!$scope.user) {
         window.location.assign("login.html");
     } else {
         getVehiclesForUser();
         getWashesForUser();
     }
 
-     /**
-        Gets vehicles associated with a user
-    */
-    function getVehiclesForUser(){
+    /**
+     Gets vehicles associated with a user
+     */
+    function getVehiclesForUser() {
         //Setup query to grab the vehicles associated with this customer
         var query = new Parse.Query("Vehicles");
         query.equalTo("customer", {
-                __type: "Pointer",
-                className: "_User",
-                objectId: $scope.user.id
-            });
+            __type: "Pointer",
+            className: "_User",
+            objectId: $scope.user.id
+        });
 
         vehicles = []; //Vehicles array
 
         //Grab vehicles
         query.find({
-          success: function(results) {
-            for(var i = 0; i < results.length; i++ ) {
-                var vehicle = {make: results[i].get("make"), model: results[i].get("model"), year: results[i].get("year"), color: results[i].get("color"), parseId: results[i].id, pointer: results[i]}
-                $scope.vehicles.push(vehicle)
-            }
+            success: function (results) {
+                for (var i = 0; i < results.length; i++) {
+                    var vehicle = {
+                        make: results[i].get("make"),
+                        model: results[i].get("model"),
+                        year: results[i].get("year"),
+                        color: results[i].get("color"),
+                        parseId: results[i].id,
+                        pointer: results[i]
+                    }
+                    $scope.vehicles.push(vehicle)
+                }
 
-            $scope.vehiclesLoaded = true;
-            $scope.$apply();
-            
-          },
-          error: function(error) {
-            alert("Error: " + error.code + " " + error.message); //TODO: Error handling
-          }
+                $scope.vehiclesLoaded = true;
+                $scope.$apply();
+
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message); //TODO: Error handling
+            }
         });
     }
 
 
-    function getWashesForUser(){
+    function getWashesForUser() {
         //Setup query to grab the washes associated with this user
         var query = new Parse.Query("Jobs");
         query.equalTo("customer", {
-                __type: "Pointer",
-                className: "_User",
-                objectId: $scope.user.id
-            });
+            __type: "Pointer",
+            className: "_User",
+            objectId: $scope.user.id
+        });
         query.notEqualTo("status", 3); //If the wash isn't complete
         query.notEqualTo("status", -1); //If the wash wasn't cancelled
 
@@ -76,171 +83,179 @@ angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
 
         //Grab vehicles
         query.find({
-          success: function(results) {
-            $scope.jobs = [];
+            success: function (results) {
+                $scope.jobs = [];
 
-            for(var i = 0; i < results.length; i++ ) {
-                var job = {date: results[i].get("date"), time: results[i].get("time"), status: convertStatusToString(results[i].get("status")), washId: results[i].get("washId"), employeeNotes: results[i].get("employeeNotes"), type: results[i].get("vehicle").get("type"), pointer: results[i]};
-                var beforePicture = results[i].get("beforePicture");
-                var afterPicture = results[i].get("afterPicture");
-                var employee = results[i].get("employee");
-                
-                //Add before/after picture if applicable
-                if ( beforePicture ) {
-                    job.beforePictureURL = beforePicture.url();
+                for (var i = 0; i < results.length; i++) {
+                    var job = {
+                        date: results[i].get("date"),
+                        time: results[i].get("time"),
+                        status: convertStatusToString(results[i].get("status")),
+                        washId: results[i].get("washId"),
+                        employeeNotes: results[i].get("employeeNotes"),
+                        type: results[i].get("vehicle").get("type"),
+                        pointer: results[i]
+                    };
+                    var beforePicture = results[i].get("beforePicture");
+                    var afterPicture = results[i].get("afterPicture");
+                    var employee = results[i].get("employee");
+
+                    //Add before/after picture if applicable
+                    if (beforePicture) {
+                        job.beforePictureURL = beforePicture.url();
+                    }
+
+                    if (afterPicture) {
+                        job.afterPictureURL = afterPicture.url();
+                    }
+
+                    if (employee) {
+                        job.employee = employee.get("stripeAccount");
+                    }
+
+                    //Whether or not this job is complete (for displaying pay/cancel)
+                    job.complete = results[i].get("status") == STATUS_COMPLETE;
+                    job.paid = results[i].get("status") == STATUS_PAID;
+
+                    $scope.jobs.push(job)
                 }
 
-                if ( afterPicture ) {
-                    job.afterPictureURL = afterPicture.url();
-                }
+                $scope.jobsLoaded = true;
 
-                if ( employee ) {
-                    job.employee = employee.get("stripeAccount");
-                }
+                $scope.$apply();
 
-                //Whether or not this job is complete (for displaying pay/cancel)
-                job.complete = results[i].get("status") == STATUS_COMPLETE;
-                job.paid = results[i].get("status") == STATUS_PAID;
-                
-                $scope.jobs.push(job)
+                setTimeout(getWashesForUser, 2000); // Do every two seconds to ensure concurrency
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message); //TODO: Error handling
             }
-
-            $scope.jobsLoaded = true;
-
-            $scope.$apply();
-
-            setTimeout(getWashesForUser, 2000); // Do every two seconds to ensure concurrency
-          },
-          error: function(error) {
-            alert("Error: " + error.code + " " + error.message); //TODO: Error handling
-          }
         });
     }
 
-    $scope.payForJob = function(job){
-		//Display Payment Modal
-	    var modalInstance = $uibModal.open({
-	      animation: true,
-	      templateUrl: 'jobCompletionModal.html',
-	      controller: 'jobCompletionCtrl',
-          windowClass: 'adjustModalHeight',
-          resolve: {
-            job: job,
-            cards: null, //TODO: GET USER cards
-          }
-	    });
+    $scope.payForJob = function (job) {
+        //Display Payment Modal
+        var modalInstance = $uibModal.open({
+            animation: true,
+            templateUrl: 'jobCompletionModal.html',
+            controller: 'jobCompletionCtrl',
+            windowClass: 'adjustModalHeight',
+            resolve: {
+                job: job,
+                cards: null, //TODO: GET USER cards
+            }
+        });
 
-	    //Upon pressing save, save the vehicle (after validating input below)
-	    modalInstance.result.then(function (newJob) {
-	    	$scope.createJobTransaction(newJob);
-	    }, function () {
-	    	//Modal was closed instead of saved
-	    });
+        //Upon pressing save, save the vehicle (after validating input below)
+        modalInstance.result.then(function (newJob) {
+            $scope.createJobTransaction(newJob);
+        }, function () {
+            //Modal was closed instead of saved
+        });
 
     }
 
-    $scope.createJobTransaction = function(job){
+    $scope.createJobTransaction = function (job) {
         var tip = job.tip;
         var baseCost = job.baseCost;
         var cid = $scope.user.get("stripeAccount");
         var aid = job.employee;
         var ccid = job.card;
         console.log(ccid);
-        var transactionURL = "https://www.waterlessbuddys.com/php/payForWash.php?TIPAMT="+tip+"&BASEAMT="+baseCost+"&CID="+cid+"&AID="+aid+"&CCID="+ccid;
+        var transactionURL = "https://www.waterlessbuddys.com/php/payForWash.php?TIPAMT=" + tip + "&BASEAMT=" + baseCost + "&CID=" + cid + "&AID=" + aid + "&CCID=" + ccid;
 
-         $.get( transactionURL, function( data ) {
+        $.get(transactionURL, function (data) {
 
             console.log(data);
             var fraudDetected = data.indexOf("fraudulent charge detected.");
 
-            if ( fraudDetected != -1 ) {
+            if (fraudDetected != -1) {
                 alert("You have attempted to modify transaction values. This occurence has been logged, and will be reported to authorities.");
             } else {
                 var parsedData = JSON.parse(data.slice(20, data.len)); //TODO: Do we really need to do anything?
-                if ( parsedData['status'] == "succeeded" ) {
+                if (parsedData['status'] == "succeeded") {
                     $scope.completeJob(job);
                 }
             }
-         });
+        });
     }
 
-    $scope.completeJob = function(job) {
+    $scope.completeJob = function (job) {
         job.pointer.set("status", STATUS_PAID);
 
         job.pointer.save(null, {
-        success: function(newJob) {
-            alert("Payment complete. Thank you for your business!");
-        },
-        error: function(newJob, error) {
-          alert('Failed to pay for job with error code: \"' + error.message + ' \" Please try again later.');
-        }
+            success: function (newJob) {
+                alert("Payment complete. Thank you for your business!");
+            },
+            error: function (newJob, error) {
+                alert('Failed to pay for job with error code: \"' + error.message + ' \" Please try again later.');
+            }
         });
     }
 
     //Claim a job
-    $scope.cancelWash = function(job){
-      job.pointer.set("status", -1);
+    $scope.cancelWash = function (job) {
+        job.pointer.set("status", -1);
 
-      job.pointer.save(null, {
-        success: function(newJob) {
-            //Succeeded
-        },
-        error: function(newJob, error) {
-          alert('Failed to cancel job, with error code: ' + error.message + ' Please try again later.');
-        }
-      });
+        job.pointer.save(null, {
+            success: function (newJob) {
+                //Succeeded
+            },
+            error: function (newJob, error) {
+                alert('Failed to cancel job, with error code: ' + error.message + ' Please try again later.');
+            }
+        });
 
     }
 
-    function convertStatusToString(status){
-        if (status == STATUS_UNCLAIMED) { 
+    function convertStatusToString(status) {
+        if (status == STATUS_UNCLAIMED) {
             return "Unclaimed";
-        } else if ( status == STATUS_CLAIMED ) {
+        } else if (status == STATUS_CLAIMED) {
             return "Claimed";
-        } else if ( status == STATUS_COMPLETE ) {
+        } else if (status == STATUS_COMPLETE) {
             return "Complete - Unpaid";
-        } else if ( status = STATUS_PAID ) {
+        } else if (status = STATUS_PAID) {
             return "Complete - Paid";
         }
     }
 
-    $scope.determineWashNumber = function(){
+    $scope.determineWashNumber = function () {
         //Setup query to grab the washes associated with this user
         var query = new Parse.Query("Sequence");
         query.equalTo("counterID", 1); //The wash counter
 
         //Grab vehicles
         query.find({
-          success: function(results) {
-            $scope.washId = 0;
-            if ( results.length == 1 ) {
-                $scope.washId = results[0].get("jobCount");
-                
-                results[0].set("jobCount", $scope.washId + 1);
-                results[0].save(null, {
-                    success: function(newJob) {
-                        //Succeess
-                    },
-                    error: function(newJob, error) {
-                      //Failure
-                    }
-                });
+            success: function (results) {
+                $scope.washId = 0;
+                if (results.length == 1) {
+                    $scope.washId = results[0].get("jobCount");
+
+                    results[0].set("jobCount", $scope.washId + 1);
+                    results[0].save(null, {
+                        success: function (newJob) {
+                            //Succeess
+                        },
+                        error: function (newJob, error) {
+                            //Failure
+                        }
+                    });
 
                     //No Lat/long --> Need to get it
-                 if ( $scope.lat == 0 && $scope.lon == 0 ) {
-                    console.log("Converted lat/long");
-                    $scope.convertAddressToLatLng();
+                    if ($scope.lat == 0 && $scope.lon == 0) {
+                        console.log("Converted lat/long");
+                        $scope.convertAddressToLatLng();
+                    } else {
+                        $scope.scheduleWash(); //Else --> Go straight to scheduling
+                    }
+
                 } else {
-                    $scope.scheduleWash(); //Else --> Go straight to scheduling
-                }               
-                
-            } else {
-                alert("Error scheduling wash.");
+                    alert("Error scheduling wash.");
+                }
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message); //TODO: Error handling
             }
-          },
-          error: function(error) {
-            alert("Error: " + error.code + " " + error.message); //TODO: Error handling
-          }
         });
     }
 
@@ -260,32 +275,32 @@ angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
     $scope.washNotes = "";
     $scope.wash = "";
 
-    $scope.convertAddressToLatLng = function(){
-        var address = $scope.address.replace(' ','+');
-        var city = $scope.city.replace(' ','+');
+    $scope.convertAddressToLatLng = function () {
+        var address = $scope.address.replace(' ', '+');
+        var city = $scope.city.replace(' ', '+');
         var state = $scope.city.replace(' ', '+');
         var geocodingURL = "https://maps.googleapis.com/maps/api/geocode/json?address=" + address + "," + city + "," + state + "&key=AIzaSyCRCnKRU2C6OAahaKiV_r21CzMqolt3iH4"; //TODO: OBFUSCATE
-        $.get( geocodingURL, function( data ) {
-          console.log(data);
+        $.get(geocodingURL, function (data) {
+            console.log(data);
 
-          //Basic error catching
-          if ( !data['status'] == 'OK' ) {
-            console.log("error occured");
-          } else {
-            // console.log(data.results[0].geometry.location.lat);
-            // console.log(data.results[0].geometry.location.lng);
-            $scope.lat = data.results[0].geometry.location.lat;
-            $scope.lon = data.results[0].geometry.location.lng;
-            console.log($scope.lat);
-            console.log($scope.lon);
+            //Basic error catching
+            if (!data['status'] == 'OK') {
+                console.log("error occured");
+            } else {
+                // console.log(data.results[0].geometry.location.lat);
+                // console.log(data.results[0].geometry.location.lng);
+                $scope.lat = data.results[0].geometry.location.lat;
+                $scope.lon = data.results[0].geometry.location.lng;
+                console.log($scope.lat);
+                console.log($scope.lon);
 
-            $scope.scheduleWash();
-          }
+                $scope.scheduleWash();
+            }
         });
     }
 
     //Use google maps instead of address block
-    $scope.getLocation = function() {
+    $scope.getLocation = function () {
         if (navigator.geolocation) {
             $scope.useMyLocation = true;
             navigator.geolocation.getCurrentPosition(showPosition, showError); //two function pointers (success, failure)
@@ -305,35 +320,35 @@ angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
         mapholder.style.width = '250px';
 
         var myOptions = {
-            center:latlon,zoom:14,
-            mapTypeId:google.maps.MapTypeId.ROADMAP,
-            mapTypeControl:false,
-            navigationControlOptions:{style:google.maps.NavigationControlStyle.SMALL}
+            center: latlon, zoom: 14,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: false,
+            navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL}
         }
-        
+
         var map = new google.maps.Map(document.getElementById("mapHolder"), myOptions);
 
         //Setup the marker
         //var markerIcon = 'img/B.PNG'; --> TODO: Icon needs to be resized w/ transparent BG
-        marker = new google.maps.Marker( {
-            position:latlon,
-            map:map,
+        marker = new google.maps.Marker({
+            position: latlon,
+            map: map,
             draggable: true,
             //icon: markerIcon,
             animation: google.maps.Animation.DROP,
-            title:"You are here!"
+            title: "You are here!"
         });
 
         //On drag, update lat/lon
-         marker.addListener('dragend', function() {
+        marker.addListener('dragend', function () {
             $scope.lat = marker.getPosition().lat();
             $scope.lon = marker.getPosition().lng();
-          });
+        });
 
     }
 
     //Scheduling a wash
-    $scope.scheduleWash = function(){
+    $scope.scheduleWash = function () {
         var JobObject = Parse.Object.extend("Jobs");
         var parseJob = new JobObject();
 
@@ -353,17 +368,17 @@ angular.module("myApp").controller("mainCtrl", function($scope, $uibModal){
 
         //Persist to Parse
         parseJob.save(null, {
-          success: function(newParseJob) {
-            alert('Saved succesfully');
-          },
-          error: function(vehicle, error) {
-            alert('Failed to create new vehicle, with error code: ' + error.message);
-          }
+            success: function (newParseJob) {
+                alert('Saved succesfully');
+            },
+            error: function (vehicle, error) {
+                alert('Failed to create new vehicle, with error code: ' + error.message);
+            }
         });
     }
 
     function showError(error) {
-        switch(error.code) {
+        switch (error.code) {
             case error.PERMISSION_DENIED:
                 $scope.mapError.innerHTML = "User denied the request for Geolocation."
                 break;
@@ -394,17 +409,17 @@ angular.module('myApp').controller('jobCompletionCtrl', function ($scope, $uibMo
 
     $scope.baseCost = 0;
 
-    if ( job.type == 1 ) {
+    if (job.type == 1) {
         $scope.baseCost = 2000;
     } else {
         $scope.baseCost = 2500;
     }
 
-    $scope.displayBaseCost = '$' + ($scope.baseCost/100).toFixed(2);
+    $scope.displayBaseCost = '$' + ($scope.baseCost / 100).toFixed(2);
 
     $scope.ok = function () {
-    	//TODO: Validate inputs
-    	job.tip = $scope.tip * 100;
+        //TODO: Validate inputs
+        job.tip = $scope.tip * 100;
         job.pointer.set("tip", job.tip + "");
         job.pointer.set("rating", $scope.rating);
         job.pointer.set("ratingText", $scope.ratingText);
@@ -413,8 +428,8 @@ angular.module('myApp').controller('jobCompletionCtrl', function ($scope, $uibMo
         $uibModalInstance.close(job);
     };
 
-    $scope.calculateTotalCost = function(value){
-        $scope.totalCost = (($scope.baseCost + ($scope.tip * 100))/100).toFixed(2);
+    $scope.calculateTotalCost = function (value) {
+        $scope.totalCost = (($scope.baseCost + ($scope.tip * 100)) / 100).toFixed(2);
         $scope.totalCost = "$" + $scope.totalCost;
     }
 
@@ -425,10 +440,10 @@ angular.module('myApp').controller('jobCompletionCtrl', function ($scope, $uibMo
     };
 
     /**
-    Gets cards associated with a user
-    */
-    $scope.getCardsForUser = function(){
-        $.get( "https://www.waterlessbuddys.com/php/retrieveCustomer.php?CID=" + Parse.User.current().get("stripeAccount"), function( data ) {
+     Gets cards associated with a user
+     */
+    $scope.getCardsForUser = function () {
+        $.get("https://www.waterlessbuddys.com/php/retrieveCustomer.php?CID=" + Parse.User.current().get("stripeAccount"), function (data) {
             var test = JSON.parse(data.slice(21, data.len));
             $scope.cards = test.sources.data;
             $scope.$apply();
