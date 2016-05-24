@@ -1,0 +1,10 @@
+{
+  "applications": {
+    "Buddys": {
+      "applicationId": "Nw7LzDSBThSKyvym6Q7TwDWcRcz44aOddL75efLL"
+    },
+    "_default": {
+      "link": "Buddys"
+    }
+  }
+}
