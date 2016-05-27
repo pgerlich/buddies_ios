@@ -27,45 +27,9 @@ function login() {
     Parse.User.logIn(email, password, {
         success: function (user) {
             var role = user.get("role");
-            var location = "profile.html";
 
-            switch (role) {
-                case 0:
-                    location = "schedule.html";
-                    break;
-                case 1:
-                    location = "jobs.html";
-
-                    ParsePushPlugin.getInstallationId(function (id) {
-                        if (!user.get('installId')) {
-                            user.set('installId', id);
-
-                            user.save();
-
-                            var query = new Parse.Query(Parse.Installation);
-                            query.equalTo('installationId', id);
-
-                            query.find({
-                                success: function (installation) {
-                                   installation[0].set('channels', ['employee']);
-                                   installation[0].save();
-                                },
-                                error: function (error) {
-
-                                }
-                            });
-                        }
-                    });
-
-                    break;
-                case 2:
-                    location = "jobs.html";
-                    break;
-                default:
-                    break;
-            }
-
-            window.location.assign(location);
+            // Register user for push notification if applicable
+            registerForAndReceivePushNotifications(user);
         },
 
         error: function (user, error) {
@@ -74,6 +38,53 @@ function login() {
         }
     });
 
+}
+
+/**
+ * Register a user to receive appropriate push notifications
+ * @param user
+ */
+function registerForAndReceivePushNotifications(user){
+
+    if ( window.ParsePushPlugin ) {
+        ParsePushPlugin.getInstallationId(function (id) {
+            alert('here 2');
+            if (user.get('installId') == '' || !user.get('installId')) {
+                alert('here 3');
+                user.set('installId', id);
+                user.save();
+
+                moveToLocation(user.get('role'));
+            }
+        });
+    } else {
+        moveToLocation(user.get('role'));
+    }
+
+}
+
+/**
+ * Forward user to the correct window
+ * @param role
+ */
+function moveToLocation(role){
+    var location = "profile.html";
+
+    switch (role) {
+        case 0:
+            location = "schedule.html";
+            break;
+        case 1:
+            location = "jobs.html";
+            break;
+        case 2:
+            location = "jobs.html";
+            break;
+        default:
+            break;
+    }
+
+    window.location.assign(location);
 }
 
 /**
