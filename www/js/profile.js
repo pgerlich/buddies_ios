@@ -168,28 +168,32 @@ angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
         }
 
         //Remove a vehicle
-        $scope.removeVehicle = function (vehicle) {
-            var VehicleObject = Parse.Object.extend("Vehicles");
-            var query = new Parse.Query(VehicleObject);
+	  //Remove a vehicle
+	  $scope.removeVehicle = function(vehicle){
+		  var shouldDelete = confirm('Are you sure you want to delete ' + vehicle['color'] + ' ' + vehicle['make'] + ' ' + vehicle['model']);
 
-            query.get(vehicle.parseId, {
-                success: function (vehicle) {
-                    vehicle.destroy({
-                        success: function (myObject) {
-                            alert("Removed succesfully");
-                            $scope.vehicles.splice($scope.vehicles.indexOf(vehicle), 1); //Remove from local view
-                            $scope.$apply();
-                        },
-                        error: function (myObject, error) {
-                            //Some error deleting
-                        }
-                    });
-                },
-                error: function (object, error) {
-                    //Some error retrieving
-                }
-            });
-        }
+		  if ( shouldDelete ) {
+			  var VehicleObject = Parse.Object.extend("Vehicles");
+			  var query = new Parse.Query(VehicleObject);
+
+			  query.get(vehicle.parseId, {
+				  success: function (vehicle) {
+					  vehicle.destroy({
+						  success: function (myObject) {
+							  $scope.vehicles.splice($scope.vehicles.indexOf(vehicle), 1); //Remove from local view
+							  $scope.$apply();
+						  },
+						  error: function (myObject, error) {
+							  //Some error deleting
+						  }
+					  });
+				  },
+				  error: function (object, error) {
+					  //Some error retrieving
+				  }
+			  });
+		  }
+	  }
 
         //Add a credit card
         $scope.addCard = function (ccId) {
@@ -201,12 +205,15 @@ angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
         }
 
         //Remove a card
-        $scope.removeCard = function (card) {
-            $.get("https://www.waterlessbuddys.com/php/deleteCard.php?CID=" + $scope.user.get("stripeAccount") + "&CARDID=" + card.id, function (data) {
-                $scope.cards.splice($scope.cards.indexOf(card), 1); //Remove from local view
-                alert("removed succesfully");
-            });
-        }
+	  	$scope.removeCard = function(card){
+            var shouldDelete = confirm('Are you sure you want to delete the card ending in ' + card['last4']);
+            if ( shouldDelete ) {
+                $.get( "php/deleteCard.php?CID=" + $scope.user.get("stripeAccount") + "&CARDID=" + card.id, function( data ) {
+                    $scope.cards.splice($scope.cards.indexOf(card), 1); //Remove from local view
+                    alert("removed succesfully");
+                });
+            }
+	  	}
     }
 
     /*

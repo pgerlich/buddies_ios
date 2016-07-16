@@ -20,7 +20,7 @@ Parse.Cloud.afterSave("Jobs", function (request, response) {
         body: {
             status: request.object.get('status'),
             employee: request.object.get('employee'),
-            customer: request.object.get("customer")
+            customer: request.object.get('customer')
         },
         success: function(httpResponse) {
 

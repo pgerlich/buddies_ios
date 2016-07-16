@@ -40,8 +40,6 @@ angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
         handler.open({
             name: 'Waterless Buddys'
         });
-
-        console.log($scope.inputEmail);
     }
 
     // Close Checkout on page navigation

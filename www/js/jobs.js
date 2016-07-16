@@ -18,6 +18,12 @@ angular.module("myApp").controller("mainCtrl", function ($scope, $uibModal) {
 
     $scope.user = Parse.User.current();
 
+    if ( window.ParsePushPlugin ) {
+        ParsePushPlugin.on('receivePN', function(pn){
+            alert(JSON.stringify(pn));
+        });
+    }
+
     if (!$scope.user) {
         window.location.assign("login.html");
     } else if ($scope.user.get("role") == 0) {

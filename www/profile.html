@@ -118,7 +118,9 @@
             <h3>Vehicles</h3>
             <div ng-repeat="vehicle in vehicles" class="inline">
                 <button class="btn btn-default" ng-dblclick="removeVehicle(vehicle)">{{vehicle.color}} {{vehicle.year}}
-                    {{vehicle.make}} {{vehicle.model}} <i class="fa fa-times-circle" onClick="alert('deleting')"></i>
+                    {{vehicle.make}} {{vehicle.model}} <i class="fa fa-times"
+                                                          style="padding-right:5px;padding-left:3px;"
+                                                          ng-click="removeVehicle(vehicle)"></i>
                 </button>
             </div>
 
@@ -127,8 +129,9 @@
             <h3>Payment Information</h3>
             <div ng-repeat="card in cards" class="inline">
                 <button class="btn btn-default" ng-dblclick="removeCard(card)" style="padding-right:2px">
-                    {{card.brand}} ending in {{card.last4}} <i style="color:red" class="fa fa-times-circle"
-                                                               onClick="alert('deleting')"></i>
+                    {{card.brand}} ending in {{card.last4}} <i class="fa fa-times"
+                                                               style="padding-right:5px;padding-left:3px;"
+                                                               ng-click="removeCard(card)"></i>
                 </button>
             </div>
             <button id="addPayment" class="btn btn-primary">+</button>
@@ -285,7 +288,7 @@
 <script src="js/user-functions.js"></script>
 
 <!-- Checkout JS for Stripe -->
-<script src="js/libs/checkout-stripe.js"></script>
+<script src="https://checkout.stripe.com/checkout.js"></script>
 
 <!-- Profile Management JS -->
 <script src="js/profile.js"></script>

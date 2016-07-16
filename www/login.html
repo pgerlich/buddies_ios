@@ -39,6 +39,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="css/font-awesome.min.css">
 
+    <!-- cordova.js to make stripe checkout work -->
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script src="cordova_plugins.js"></script>
+
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -133,11 +137,11 @@
 <!-- Custom Javascript -->
 <script src="js/custom2.js"></script>
 
-<!-- Custom JS -->
-<script src="js/user-functions.js"></script>
-
 <!-- Parse -->
 <script src="js/libs/parse-1.6.12.min.js"></script>
+
+<!-- Push Notification plugin -->
+<script src="js/libs/parse-push-plugin.js"></script>
 
 <!-- Smooth same-page scrolling -->
 <script type="text/javascript" src="js/libs/smoothscroll.js"></script>
@@ -155,6 +159,9 @@
     });
 
 </script>
+
+<!-- Custom JS -->
+<script src="js/user-functions.js"></script>
 
 
 </body>

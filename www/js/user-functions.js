@@ -28,6 +28,8 @@ function login() {
         success: function (user) {
             var role = user.get("role");
 
+            console.log('hit');
+
             // Register user for push notification if applicable
             registerForAndReceivePushNotifications(user);
         },
@@ -45,17 +47,16 @@ function login() {
  * @param user
  */
 function registerForAndReceivePushNotifications(user){
+	console.log('hit');
 
     if ( window.ParsePushPlugin ) {
         ParsePushPlugin.getInstallationId(function (id) {
-            alert('here 2');
             if (user.get('installId') == '' || !user.get('installId')) {
-                alert('here 3');
                 user.set('installId', id);
                 user.save();
-
-                moveToLocation(user.get('role'));
             }
+
+            moveToLocation(user.get('role'));
         });
     } else {
         moveToLocation(user.get('role'));
